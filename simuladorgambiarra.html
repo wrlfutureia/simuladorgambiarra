@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Contrapartida Comercial</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+
+    :root {
+      color-scheme: light dark;
+      --bg: #050a1a;
+      --panel: rgba(12, 17, 37, 0.85);
+      --border: rgba(88, 140, 255, 0.35);
+      --accent: #58d5ff;
+      --accent-strong: #ff5f6d;
+      --text: #ecf7ff;
+      --muted: #9fb4d6;
+      font-family: "Space Grotesk", "Segoe UI", Arial, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(88, 213, 255, 0.18), transparent 55%),
+        radial-gradient(circle at 80% 0%, rgba(255, 95, 109, 0.15), transparent 50%),
+        linear-gradient(135deg, rgba(3, 6, 23, 0.95), rgba(5, 9, 24, 0.95)),
+        url("gambiarra.png") center/cover no-repeat fixed;
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 16px 64px;
+    }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      border-radius: 30px;
+      padding: 32px;
+      backdrop-filter: blur(14px);
+      background: rgba(5, 10, 26, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    header {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+    .hero-copy {
+      flex: 1;
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: #fff;
+      text-shadow: 0 6px 25px rgba(0, 0, 0, 0.35);
+    }
+    header p {
+      color: var(--muted);
+      margin: 10px 0 0;
+      max-width: 620px;
+      font-size: 1rem;
+    }
+    .hero-eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      color: var(--accent);
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+    .hero-icon-wrap {
+      width: 220px;
+      height: 220px;
+      border-radius: 36px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 15px 35px rgba(3, 5, 20, 0.7);
+      flex-shrink: 0;
+      background: radial-gradient(circle, rgba(8, 16, 40, 0.95), rgba(2, 5, 20, 0.9));
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-icon-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      border-radius: 30px;
+    }
+    main {
+      display: grid;
+      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(10, 16, 38, 0.95), rgba(4, 7, 22, 0.9));
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+      backdrop-filter: blur(18px);
+      box-shadow: 0 20px 45px rgba(3, 5, 20, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      pointer-events: none;
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+      color: #ff5f6d;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .card-ecosistema {
+      background: linear-gradient(160deg, rgba(34, 68, 140, 0.95) 0%, rgba(16, 31, 70, 0.92) 70%);
+      border: 1px solid rgba(134, 199, 255, 0.5);
+      box-shadow: 0 30px 60px rgba(15, 23, 60, 0.65);
+    }
+    .card-ecosistema h2 {
+      color: var(--accent) !important;
+      text-align: center !important;
+    }
+    .card-ecosistema label {
+      color: var(--accent) !important;
+    }
+    .card-ecosistema .stack > label {
+      color: var(--accent) !important;
+    }
+    .card-diferenciais h2 {
+      color: var(--accent) !important;
+    }
+    .card-diferenciais .extras label {
+      color: var(--accent) !important;
+    }
+    button#calcular {
+      background: #000000 !important;
+      color: var(--accent) !important;
+      border: 2px solid var(--accent) !important;
+    }
+    button#calcular:hover {
+      background: rgba(0, 0, 0, 0.8) !important;
+      border-color: var(--accent) !important;
+    }
+    .card-resumo h2 {
+      color: #38ef7d !important;
+    }
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.92rem;
+      margin-bottom: 14px;
+      color: #ff5f6d;
+      width: 100%;
+    }
+    .destaque-total {
+      border: 1px solid var(--accent);
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(56, 189, 248, 0.08);
+      color: #ff5f6d !important;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.15);
+    }
+    .destaque-total .money-field {
+      border-color: var(--accent);
+      background: rgba(2, 6, 23, 0.7);
+    }
+    input, select {
+      border-radius: 12px;
+      border: 1px solid rgba(111, 144, 255, 0.35);
+      background: rgba(8, 12, 30, 0.9);
+      color: var(--text);
+      padding: 12px;
+      font-size: 1rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .money-field {
+      border-radius: 10px;
+      border: 1px solid rgba(111, 144, 255, 0.35);
+      background: rgba(6, 10, 26, 0.95);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px 0 16px;
+      width: 100%;
+    }
+    .money-field span {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .money-field input {
+      border: none;
+      background: transparent;
+      padding: 12px 0;
+      flex: 1;
+      color: var(--text);
+      font-size: 1rem;
+      min-width: 0;
+    }
+    .money-field input:focus {
+      border: none;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+    .stack {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .stack > label {
+      flex: 1 1 160px;
+      margin-bottom: 0;
+      color: #ff5f6d !important;
+    }
+    .produtos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .produto-item {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid rgba(111, 144, 255, 0.2);
+      border-radius: 14px;
+      background: rgba(8, 12, 30, 0.5);
+    }
+    .produtos-grid label {
+      margin: 0;
+      color: #ff5f6d !important;
+    }
+    .extras {
+      display: grid;
+      gap: 8px;
+    }
+    .extras label {
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      color: #ff5f6d !important;
+    }
+    .extras input {
+      width: auto;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      color: #ff5f6d !important;
+    }
+    button.primary {
+      background: linear-gradient(120deg, #06b6d4, #2563eb);
+      color: #f8fafc;
+      box-shadow: 0 10px 20px rgba(14, 165, 233, 0.35);
+    }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    .resultado {
+      grid-column: 1 / -1;
+    }
+    .figures {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 24px 0;
+    }
+    .figure {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .figure span {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .figure strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.2rem;
+    }
+    .figure-azul {
+      background: linear-gradient(160deg, rgba(64, 118, 200, 0.95) 0%, rgba(56, 91, 150, 0.92) 70%);
+      border: 1px solid rgba(174, 229, 255, 0.7);
+      box-shadow: 0 30px 60px rgba(45, 73, 120, 0.65);
+    }
+    .vantagens {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      display: grid;
+      gap: 10px;
+    }
+    .vantagens li {
+      background: rgba(56, 189, 248, 0.07);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #e0f2fe;
+    }
+    .pitch {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px dashed var(--accent);
+      background: rgba(8, 47, 73, 0.6);
+      font-size: 0.95rem;
+      line-height: 1.4;
+    }
+    .slider {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    @keyframes piscar {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .piscando {
+      animation: piscar 1.5s ease-in-out infinite;
+    }
+    .footer {
+      text-align: left;
+      padding: 20px;
+      margin-top: 40px;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    @media (max-width: 640px) {
+      body {
+        padding: 20px 10px 40px;
+      }
+      .stack {
+        flex-direction: column;
+      }
+      .produtos-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="hero-icon-wrap">
+        <img src="gambiarra.png" alt="Identidade Fuja da Gambiarra">
+      </div>
+      <div class="hero-copy">
+        <span class="hero-eyebrow">Fuja da Gambiarra</span>
+        <h1>Simulador sai fora da Gambiarra</h1>
+        <p>Compare rapidamente os números da gambiarra versus a sua proposta e extraia argumentos comerciais prontos para iniciar a negociação com vantagem.</p>
+      </div>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2 style="text-align: center; width: 100%;">O preço oculto da Gambiarra</h2>
+        <p style="color: #ff5f6d; margin-top: -4px; font-size: 0.85rem;">Informe os valores mensais cobrados em cada módulo da Gambiarra.</p>
+        <div class="produtos-grid">
+          <div class="produto-item">
+            <label>
+              Nome da Gambiarra
+              <input type="text" class="produtoNome" placeholder="Gambiarra Principal">
+            </label>
+            <label>
+              Valor (R$)
+              <div class="money-field">
+                <span>R$</span>
+                <input type="number" class="produtoValor" placeholder="400" min="0" step="50">
+              </div>
+            </label>
+          </div>
+          <div class="produto-item">
+            <label>
+              Nome da Gambiarra
+              <input type="text" class="produtoNome" placeholder="Gambiarra 2">
+            </label>
+            <label>
+              Valor (R$)
+              <div class="money-field">
+                <span>R$</span>
+                <input type="number" class="produtoValor" placeholder="250" min="0" step="50">
+              </div>
+            </label>
+          </div>
+          <div class="produto-item">
+            <label>
+              Nome da Gambiarra
+              <input type="text" class="produtoNome" placeholder="Gambiarra 3">
+            </label>
+            <label>
+              Valor (R$)
+              <div class="money-field">
+                <span>R$</span>
+                <input type="number" class="produtoValor" placeholder="350" min="0" step="50">
+              </div>
+            </label>
+          </div>
+          <div class="produto-item">
+            <label>
+              Nome da Gambiarra
+              <input type="text" class="produtoNome" placeholder="Gambiarra 4">
+            </label>
+            <label>
+              Valor (R$)
+              <div class="money-field">
+                <span>R$</span>
+                <input type="number" class="produtoValor" placeholder="180" min="0" step="50">
+              </div>
+            </label>
+          </div>
+          <div class="produto-item">
+            <label>
+              Nome da Gambiarra
+              <input type="text" class="produtoNome" placeholder="Gambiarra 5">
+            </label>
+            <label>
+              Valor (R$)
+              <div class="money-field">
+                <span>R$</span>
+                <input type="number" class="produtoValor" placeholder="150" min="0" step="50">
+              </div>
+            </label>
+          </div>
+        </div>
+        <label class="destaque-total">
+          Mensalidade total da gambiarra (R$)
+            <div class="money-field">
+              <span>R$</span>
+              <input type="number" id="concorrenteMensal" placeholder="1499" min="0" step="50" readonly>
+            </div>
+        </label>
+        <label>
+          Taxa de implantação (R$)
+            <div class="money-field">
+              <span>R$</span>
+              <input type="number" id="concorrenteSetup" placeholder="3500" min="0" step="50">
+            </div>
+        </label>
+        <div class="stack">
+          <label>
+            Contrato (meses)
+            <input type="number" id="concorrenteContrato" value="12" min="1" max="36">
+          </label>
+          <label>
+            SLA (horas)
+            <input type="number" id="concorrenteSla" value="24" min="1">
+          </label>
+        </div>
+        <label>
+          Pontos fortes declarados
+          <input type="text" id="concorrentePontos" placeholder="Ex.: Automação fiscal, BI incluso...">
+        </label>
+      </section>
+
+      <section class="card card-ecosistema">
+        <h2>Proposta Ecosistema Alterdata</h2>
+        <label>
+          Mensalidade (R$)
+            <div class="money-field">
+              <span>R$</span>
+              <input type="number" id="meuMensal" placeholder="1299" min="0" step="50">
+            </div>
+        </label>
+        <label>
+          Implantação (R$)
+            <div class="money-field">
+              <span>R$</span>
+              <input type="number" id="meuSetup" placeholder="1800" min="0" step="50">
+            </div>
+        </label>
+        <div class="stack">
+          <label>
+            Bônus de migração (R$)
+            <div class="money-field">
+              <span>R$</span>
+              <input type="number" id="bonusMigracao" value="0" min="0" step="100">
+            </div>
+          </label>
+          <label>
+            Prazo de go-live (dias)
+            <input type="number" id="prazoGoLive" value="15" min="1">
+          </label>
+        </div>
+      </section>
+
+      <section class="card card-diferenciais">
+        <h2>Diferenciais Disponíveis</h2>
+        <div class="extras">
+          <label><input type="checkbox" class="beneficio" value="Onboarding guiado em 48h">Onboarding guiado em 48h</label>
+          <label><input type="checkbox" class="beneficio" value="Suporte humano pelo chat">Suporte humano pelo chat</label>
+          <label><input type="checkbox" class="beneficio" value="Treinamento ilimitado pela UCAPLUS">Treinamento ilimitado pela UCAPLUS</label>
+          <label><input type="checkbox" class="beneficio" value="Time dedicado à migração">Time dedicado à migração</label>
+          <label><input type="checkbox" class="beneficio" value="Roadmap transparente">Roadmap transparente</label>
+          <label><input type="checkbox" class="beneficio" value="Acompanhamento da integração">Acompanhamento da integração</label>
+          <label><input type="checkbox" class="beneficio" value="MASTER 36 - Pack FIT (DP / Cont / Fiscal / Ativo / Bank Folha / Guias / Ciap / Financeiro / Integração ERP for ME / UCA / ) / eCONTADOR Master / CND / Collect / Analir / Karoo KB / Karoo IA / Karoo BOT / Karoo CHAT / NF Stock / ISS Easy">MASTER 36 - Pack FIT (DP / Cont / Fiscal / Ativo / Bank Folha / Guias / Ciap / Financeiro / Integração ERP for ME / UCA / ) / eCONTADOR Master / CND / Collect / Analir / Karoo KB / Karoo IA / Karoo BOT / Karoo CHAT / NF Stock / ISS Easy</label>
+        </div>
+        <div class="actions">
+          <button class="primary" id="calcular">Gerar contrapartida</button>
+          <button class="secondary" id="copiar" style="color: #ff5f6d !important;">Copiar pitch</button>
+          <button class="secondary" onclick="window.open('https://mandala-erp.alt-prd-clt01.alterdatasoftware.com.br/mandalas/mandala-contabil/', '_blank')" style="background: linear-gradient(120deg, #667eea, #764ba2); color: #ff5f6d !important; border: none;">
+            📊 Acessar Mandala Contábil
+          </button>
+          <button class="secondary" onclick="window.open('https://www.alterdata.com.br/contabil', '_blank')" style="background: linear-gradient(120deg, #06b6d4, #2563eb); color: #ff5f6d !important; border: none;">
+            🌐 Conhecer Soluções Contábeis
+          </button>
+        </div>
+      </section>
+
+      <section class="card resultado card-resumo">
+        <h2>Resumo Estratégico</h2>
+        <div class="figures">
+          <div class="figure">
+            <span>Economia potencial em 12 meses</span>
+            <strong id="economia">R$ 0</strong>
+          </div>
+          <div class="figure figure-azul">
+            <span id="labelPayback">Payback estimado</span>
+            <strong id="payback">—</strong>
+          </div>
+          <div class="figure figure-azul">
+            <span id="labelVantagem">Vantagem percebida</span>
+            <strong id="vantagemPercebida">Neutral</strong>
+          </div>
+        </div>
+        <ul class="vantagens" id="listaVantagens">
+          <li>Use o simulador para mapear argumentos antes da reunião.</li>
+        </ul>
+        <h3 style="color: #38ef7d; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin-top: 24px; margin-bottom: 12px;"><strong>Pitch</strong></h3>
+        <div class="pitch" id="pitchPronto">
+          Gere a contrapartida para ter um discurso completo em segundos.
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    WRL-2025 V2
+  </footer>
+
+  <script>
+    const currency = value =>
+      isFinite(value) ? value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "—";
+
+    const inputs = {
+      concorrenteMensal: document.getElementById("concorrenteMensal"),
+      concorrenteSetup: document.getElementById("concorrenteSetup"),
+      concorrenteContrato: document.getElementById("concorrenteContrato"),
+      concorrenteSla: document.getElementById("concorrenteSla"),
+      concorrentePontos: document.getElementById("concorrentePontos"),
+      meuMensal: document.getElementById("meuMensal"),
+      meuSetup: document.getElementById("meuSetup"),
+      bonusMigracao: document.getElementById("bonusMigracao"),
+      prazoGoLive: document.getElementById("prazoGoLive")
+    };
+    const produtoInputs = [...document.querySelectorAll(".produtoValor")];
+    const produtoNomes = [...document.querySelectorAll(".produtoNome")];
+
+    const atualizarMensalConcorrente = () => {
+      const total = produtoInputs.reduce((soma, campo) => soma + (Number(campo.value) || 0), 0);
+      inputs.concorrenteMensal.value = total;
+      return total;
+    };
+    produtoInputs.forEach(campo => campo.addEventListener("input", atualizarMensalConcorrente));
+
+    const camposResultado = {
+      economia: document.getElementById("economia"),
+      payback: document.getElementById("payback"),
+      vantagemPercebida: document.getElementById("vantagemPercebida"),
+      listaVantagens: document.getElementById("listaVantagens"),
+      pitch: document.getElementById("pitchPronto")
+    };
+
+    const calcular = () => {
+      const concorrenteMensal = atualizarMensalConcorrente() || 0;
+      const concorrenteSetup = Number(inputs.concorrenteSetup.value) || 0;
+      const contrato = Number(inputs.concorrenteContrato.value) || 12;
+      const meuMensal = Number(inputs.meuMensal.value) || 0;
+      const meuSetup = Number(inputs.meuSetup.value) || 0;
+      const bonus = Number(inputs.bonusMigracao.value) || 0;
+      const prazo = Number(inputs.prazoGoLive.value) || 15;
+
+      const totalConcorrente = (concorrenteMensal * contrato) + concorrenteSetup;
+      const totalMeu = (meuMensal * contrato) + Math.max(meuSetup - bonus, 0);
+      const economia = totalConcorrente - totalMeu;
+      const economiaMensal = concorrenteMensal - meuMensal;
+      const payback = economiaMensal > 0
+        ? Math.max(Math.ceil((meuSetup - bonus) / economiaMensal), 1)
+        : null;
+
+      camposResultado.economia.textContent = currency(economia);
+      camposResultado.payback.textContent = payback ? `${payback} mês(es)` : "Foque em valor agregado";
+      camposResultado.vantagemPercebida.textContent =
+        economia > 0 ? "Preço vencedor" : economia === 0 ? "Valor equivalente" : "Reforçar diferenciação";
+
+      // Adicionar animação de piscar nos elementos de Payback e Vantagem
+      document.getElementById("labelPayback").classList.add("piscando");
+      document.getElementById("payback").classList.add("piscando");
+      document.getElementById("labelVantagem").classList.add("piscando");
+      document.getElementById("vantagemPercebida").classList.add("piscando");
+
+      const beneficiosSelecionados = [...document.querySelectorAll(".beneficio:checked")].map(el => el.value);
+      const lista = [];
+
+      const produtosDetalhados = produtoInputs
+        .map((campo, index) => {
+          const nomePersonalizado = produtoNomes[index]?.value?.trim() || "";
+          const nomePadrao = index === 0 ? 'Gambiarra Principal' : `Gambiarra ${index + 1}`;
+          const label = nomePersonalizado || nomePadrao;
+          return { label, valor: Number(campo.value) || 0 };
+        })
+        .filter(item => item.valor > 0);
+
+      if (produtosDetalhados.length) {
+        const labels = produtosDetalhados.map(item => `${item.label}: ${currency(item.valor)}`).join(" | ");
+        lista.push(`A gambiarra distribui o custo em ${produtosDetalhados.length} sistemas (${labels}).`);
+      }
+
+      if (economia > 0) {
+        lista.push(`Economia direta de ${currency(economia)} no período de ${contrato} meses.`);
+      } else {
+        lista.push("Mesmo com investimento similar, entregamos retorno mais rápido e previsível.");
+      }
+
+      if (bonus > 0) {
+        lista.push(`Oferecemos ${currency(bonus)} em bônus para neutralizar a troca e acelerar o go-live.`);
+      }
+
+      if (prazo <= 15) {
+        lista.push(`Go-live em até ${prazo} dias com time dedicado à migração.`);
+      }
+
+      if (inputs.concorrenteSla.value) {
+        const sla = Number(inputs.concorrenteSla.value);
+        if (sla > 12) {
+          lista.push("SLA de atendimento menor que 12h para incidentes críticos.");
+        }
+      }
+
+      beneficiosSelecionados.forEach(b => lista.push(b));
+
+      if (inputs.concorrentePontos.value) {
+        lista.push(`Contraponto aos diferenciais da gambiarra: ${inputs.concorrentePontos.value}.`);
+      }
+
+      camposResultado.listaVantagens.innerHTML = lista
+        .map(item => `<li>${item}</li>`)
+        .join("") || "<li>Selecione benefícios para montar o argumento.</li>";
+
+      const pitchArray = [
+        economia > 0
+          ? `Podemos reduzir seu custo total em ${currency(Math.max(economia, 0))} no horizonte de ${contrato} meses.`
+          : "Ainda que o investimento seja parecido, entregamos previsibilidade e suporte premium sem custo adicional.",
+        bonus > 0
+          ? `Aplicamos um bônus imediato de ${currency(bonus)} para absorver a migração.`
+          : "Nossa implantação já inclui acompanhamento próximo e sem surpresas.",
+        `Colocamos o time em produção em até ${prazo} dias e assumimos a responsabilidade pela curva de adoção.`,
+        beneficiosSelecionados.length
+          ? `Diferenciais chaves: ${beneficiosSelecionados.join(", ")}.`
+          : "Escolha os diferenciais que quer destacar e gere um speech automático.",
+        "Posso formalizar ainda hoje se fizer sentido continuar?"
+      ];
+
+      // Formatando o pitch em parágrafos e tópicos
+      const pitchHTML = pitchArray
+        .map(item => `<p style="margin: 8px 0;">• ${item}</p>`)
+        .join("");
+      
+      camposResultado.pitch.innerHTML = pitchHTML;
+      
+      // Retornar o texto plano para copiar
+      const pitchTexto = pitchArray.join(" ");
+      return pitchTexto;
+    };
+
+    document.getElementById("calcular").addEventListener("click", calcular);
+
+    document.getElementById("copiar").addEventListener("click", () => {
+      const texto = calcular();
+      const originalHTML = camposResultado.pitch.innerHTML;
+      navigator.clipboard.writeText(texto)
+        .then(() => {
+          camposResultado.pitch.innerHTML = `<p style="margin: 8px 0; color: #38ef7d; font-weight: 600;">✅ Pitch copiado para a área de transferência!</p>`;
+          setTimeout(() => {
+            camposResultado.pitch.innerHTML = originalHTML;
+          }, 2000);
+        })
+        .catch(() => {
+          camposResultado.pitch.innerHTML = `<p style="margin: 8px 0; color: #ff5f6d;">Não foi possível copiar automaticamente. Copie manualmente.</p>`;
+          setTimeout(() => {
+            camposResultado.pitch.innerHTML = originalHTML;
+          }, 3000);
+        });
+    });
+  </script>
+</body>
+</html>
+
